@@ -211,62 +211,10 @@ def modificar_cliente():
         if connection:
             connection.rollback()
     finally:
-        if cursor: 
-            cursor.close()
-        if connection: 
-            connection.close()
+        if cursor: cursor.close()
+        if connection: connection.close()
 
-def eliminar_cliente():
-    connection = None
-    cursor = None
-    try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+
+
         
-        # Listar todos los clientes
-        cursor.execute("SELECT * FROM cliente")
-        clientes = cursor.fetchall()
-        lista_cliente(clientes)
-        
-        if not clientes:
-            print("No hay clientes registrados.")
-            return
-        
-        # Seleccionar cliente a eliminar
-        while True:
-            try:
-                opcion = int(input("\nSelecciona el número de id del cliente que deseas eliminar: "))
-                
-                cliente_encontrado = None
-                for cliente in clientes:
-                    if cliente["id_cliente"] == opcion:
-                        cliente_encontrado = cliente
-                        break
-                
-                if cliente_encontrado:
-                    # Confirmar eliminación
-                    confirmacion = input(f"¿Estás seguro de eliminar al cliente {cliente_encontrado['razon_social']}? (s/n): ").lower()
-                    if confirmacion == 's':
-                        break
-                    else:
-                        print("Operación cancelada")
-                        return
-                else:
-                    print("❌ El id del cliente ingresado no es válido")
-            except ValueError:
-                print("❌ Por favor ingresa un número válido")
-        
-        # Eliminar cliente
-        cursor.execute("DELETE FROM cliente WHERE id_cliente = %s", (opcion,))
-        connection.commit()
-        print("✅ Cliente eliminado correctamente")
-        
-    except Exception as e:
-        print(f"❌ Error al eliminar cliente: {str(e)}")
-        if connection:
-            connection.rollback()
-    finally:
-        if cursor: 
-            cursor.close()
-        if connection: 
-            connection.close()
+      
