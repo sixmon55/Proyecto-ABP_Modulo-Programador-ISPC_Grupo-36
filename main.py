@@ -1,4 +1,5 @@
 import gestion_destino
+import gestion_cliente
 
 
 
@@ -39,7 +40,7 @@ def menu_inicio():
                                                   
         match opcion:
                         case 1:
-                            gestion_clientes()
+                            gestion_cliente.main(menu_inicio)
                         case 2:
                             gestion_destino.gestion_destino(menu_inicio)
                         case 3:

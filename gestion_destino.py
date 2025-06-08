@@ -1,4 +1,4 @@
-from conexion import get_connection  # Asegúrate que este es el nombre correcto de tu archivo
+from conexion import get_connection 
 
 
 
@@ -328,18 +328,15 @@ def eliminar_destino(menu_inicio):
                     print("🚫 Eliminación cancelada")
                     continue
                 
-                # 3. Manejo de eliminación (sin transacción explícita)
                 try:
                     # Primero eliminar el destino
                     cursor.execute("DELETE FROM destino WHERE id_destino = %s", (id_destino,))
                     
-                    # Verificar si se puede eliminar la ciudad
                     cursor.execute("SELECT COUNT(*) FROM destino WHERE id_ciudad = %s", (destino['id_ciudad'],))
                     if cursor.fetchone()['COUNT(*)'] == 0:
                         cursor.execute("DELETE FROM ciudad WHERE id_ciudad = %s", (destino['id_ciudad'],))
                         print(f"⚠️ Se eliminó la ciudad {destino['ciudad']}")
                     
-                    # Verificar si se puede eliminar el país
                     cursor.execute("SELECT COUNT(*) FROM ciudad WHERE id_pais = %s", (destino['id_pais'],))
                     if cursor.fetchone()['COUNT(*)'] == 0:
                         cursor.execute("DELETE FROM pais WHERE id_pais = %s", (destino['id_pais'],))
@@ -359,15 +356,6 @@ def eliminar_destino(menu_inicio):
                 except Exception as e:
                     connection.rollback()
                     print(f"❌ Error al eliminar: {str(e)}")
-                    print("ℹ️ Solución recomendada: Ejecute este comando SQL:")
-                    print("""
-                    ALTER TABLE destino
-                    DROP FOREIGN KEY [nombre_de_la_restriccion],
-                    ADD CONSTRAINT [nombre_de_la_restriccion] 
-                    FOREIGN KEY (id_ciudad) REFERENCES ciudad(id_ciudad)
-                    ON DELETE CASCADE;
-                    """)
-                    continue
                 
             except ValueError:
                 print("❌ Error: Debe ingresar un número válido")
