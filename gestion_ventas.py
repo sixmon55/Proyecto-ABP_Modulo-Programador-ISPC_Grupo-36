@@ -1,7 +1,8 @@
 from datetime import datetime
 from conexion import get_connection
 
-def menu_ventas():
+
+def menu_ventas(menu_inicio):
     while True:
         print("\n--- Gestión de Ventas ---")
         print("1. Registrar nueva venta")
@@ -18,6 +19,7 @@ def menu_ventas():
         elif opcion == "3":
             informe_ventas()
         elif opcion == "4":
+            menu_inicio()
             return
         else:
             print("Opción inválida. Intente nuevamente.")
