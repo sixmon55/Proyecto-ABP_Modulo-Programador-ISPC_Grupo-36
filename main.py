@@ -1,7 +1,9 @@
-import gestion_destino
-import gestion_cliente
 import boton_arrepentimiento
-
+import gestion_destino
+import gestion_ventas
+import gestion_cliente
+import acerca_sistema
+import sys
 
 def mostrar_titulo():
      print(r"""
@@ -22,9 +24,9 @@ def menu_inicio():
         ✈  Bienvenido al sistema de gestión de reservas aéreas
 
         [1] Gestion de Clientes            [3] Gestionar ventas
-        [2] Gestionar Destinos             [4] Consultar Ventas
-        [5] Boton de Arrepentimiento       [7] Ver Reporte General
-        [6] Acerca del Sistema             [8] Salir  
+        [2] Gestionar Destinos             [4] Acerca del sistema
+        [5] Boton de Arrepentimiento       [6] Salir
+       
 
         ════════════════════════════════════════
         """)
@@ -44,17 +46,14 @@ def menu_inicio():
                         case 2:
                             gestion_destino.gestion_destino(menu_inicio)
                         case 3:
-                            gestion_ventas()
+                            gestion_ventas.menu_ventas(menu_inicio)
                         case 4:
-                            consultar_ventas()
+                            acerca_sistema.info_programa(menu_inicio)
                         case 5:
                             boton_arrepentimiento.pantalla_arrepentimiento()
                         case 6: 
-                            acerca_sistema()
-                        case 7:
-                            ver_reporte()
-                        case 8:
-                            salir()
+                            sys.exit()
+
                             
                             
 
