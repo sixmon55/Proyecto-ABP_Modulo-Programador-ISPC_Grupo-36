@@ -52,9 +52,9 @@ def main(menu_inicio):
                             case 2:
                                     agregar_cliente(menu_inicio)
                             case 3 : 
-                                    modificar_cliente()
+                                    modificar_cliente(menu_inicio)
                             case 4 : 
-                                    eliminar_cliente()
+                                    eliminar_cliente(menu_inicio)
                             case 5 :
                                     menu_inicio()
 
@@ -97,7 +97,6 @@ def ver_cliente(menu_inicio):
             cursor.close()
         if connection: 
             connection.close()
-
 def agregar_cliente(menu_inicio):
     connection = None
     cursor = None
@@ -108,9 +107,10 @@ def agregar_cliente(menu_inicio):
         while True:
             try:
                 # Solicitar datos
-                cuit = input("\nIngrese el CUIT (11 dígitos sin guiones) ► ").strip()
+                print("\n--- AGREGAR NUEVO CLIENTE ---")
+                cuit = input("Ingrese el CUIT (11 dígitos sin guiones) ► ").strip()
                 razon_social = input("Ingrese la Razón Social ► ").strip()
-                email = input("Ingrese el Email  ► ").strip()
+                email = input("Ingrese el Email ► ").strip()
 
                 # Validaciones básicas
                 if not cuit.isdigit() or len(cuit) != 11:
@@ -137,24 +137,36 @@ def agregar_cliente(menu_inicio):
                 print(f"\n✅ Cliente {razon_social} agregado correctamente con ID: {cursor.lastrowid}")
                 
                 # Preguntar si desea agregar otro
-                otro = input("\n¿Desea agregar otro cliente? (s/n) ► ").lower()
-                if otro != 's':
-                    break
+                while True:
+                    otro = input("\n¿Qué deseas hacer ahora?\n1. Agregar otro cliente\n2. Volver al menú principal\n3. Salir del programa\n► ").strip()
+                    
+                    if otro == '1':
+                        break  # Continúa el bucle para agregar otro cliente
+                    elif otro == '2':
+                        return menu_inicio()
+                    elif otro == '3':
+                        print("¡Hasta luego!")
+                        exit()
+                    else:
+                        print("❌ Opción no válida. Por favor ingrese 1, 2 o 3")
+                        continue
 
             except ValueError as ve:
                 print(f"❌ Error de validación: {str(ve)}")
             except Exception as e:
                 connection.rollback()
                 print(f"❌ Error al agregar cliente: {str(e)}")
-
+                
     except Exception as e:
-        print(f"❌ Error de conexión: {str(e)}")
+        print(f"❌ Error general: {str(e)}")
+        return menu_inicio()
     finally:
-        if cursor: cursor.close()
-        if connection: connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
-
-def modificar_cliente():
+def modificar_cliente(menu_inicio):
     connection = None
     cursor = None
     try:
@@ -168,7 +180,7 @@ def modificar_cliente():
         
         if not clientes:
             print("No hay clientes registrados.")
-            return
+            return menu_inicio()
         
         # Seleccionar cliente a modificar
         while True:
@@ -188,7 +200,7 @@ def modificar_cliente():
             except ValueError:
                 print("❌ Por favor ingresa un número válido")
         
-        # Obtener nuevos datos (mantener los actuales si no se ingresan)
+        # Obtener nuevos datos
         print(f"\nModificando cliente: {cliente_encontrado['razon_social']}")
         print("(Presiona Enter para mantener el valor actual)")
         
@@ -206,15 +218,91 @@ def modificar_cliente():
         connection.commit()
         print("✅ Cliente modificado correctamente")
         
+        # Opción para volver al menú o salir
+        while True:
+            opcion = input("\n¿Qué deseas hacer ahora?\n1. Volver al menú principal\n2. Salir del programa\nSeleccione una opción: ")
+            if opcion == '1':
+                return menu_inicio()
+            elif opcion == '2':
+                print("¡Hasta luego!")
+                exit()
+            else:
+                print("❌ Opción no válida. Por favor ingrese 1 o 2")
+        
     except Exception as e:
         print(f"❌ Error al modificar cliente: {str(e)}")
         if connection:
             connection.rollback()
+        return menu_inicio()
     finally:
-        if cursor: cursor.close()
-        if connection: connection.close()
+        if cursor: 
+            cursor.close()
+        if connection: 
+            connection.close()
 
-
-
+def eliminar_cliente(menu_inicio):
+    connection = None
+    cursor = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
         
-      
+        # Listar todos los clientes
+        cursor.execute("SELECT * FROM cliente")
+        clientes = cursor.fetchall()
+        lista_cliente(clientes)
+        
+        if not clientes:
+            print("No hay clientes registrados.")
+            return menu_inicio()
+        
+        # Seleccionar cliente a eliminar
+        while True:
+            try:
+                opcion = int(input("\nSelecciona el número de id del cliente que deseas eliminar: "))
+                
+                cliente_encontrado = None
+                for cliente in clientes:
+                    if cliente["id_cliente"] == opcion:
+                        cliente_encontrado = cliente
+                        break
+                
+                if cliente_encontrado:
+                    # Confirmar eliminación
+                    confirmacion = input(f"¿Estás seguro de eliminar al cliente {cliente_encontrado['razon_social']}? (s/n): ").lower()
+                    if confirmacion == 's':
+                        break
+                    else:
+                        print("Operación cancelada")
+                        return menu_inicio()
+                else:
+                    print("❌ El id del cliente ingresado no es válido")
+            except ValueError:
+                print("❌ Por favor ingresa un número válido")
+        
+        # Eliminar cliente
+        cursor.execute("DELETE FROM cliente WHERE id_cliente = %s", (opcion,))
+        connection.commit()
+        print("✅ Cliente eliminado correctamente")
+        
+        # Opción para volver al menú o salir
+        while True:
+            opcion = input("\n¿Qué deseas hacer ahora?\n1. Volver al menú principal\n2. Salir del programa\nSeleccione una opción: ")
+            if opcion == '1':
+                return menu_inicio()
+            elif opcion == '2':
+                print("¡Hasta luego!")
+                exit()
+            else:
+                print("❌ Opción no válida. Por favor ingrese 1 o 2")
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar cliente: {str(e)}")
+        if connection:
+            connection.rollback()
+        return menu_inicio()
+    finally:
+        if cursor: 
+            cursor.close()
+        if connection: 
+            connection.close()
