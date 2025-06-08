@@ -155,39 +155,121 @@ def agregar_cliente(menu_inicio):
 
 
 def modificar_cliente():
-      
     connection = None
     cursor = None
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
+        
+        # Listar todos los clientes
         cursor.execute("SELECT * FROM cliente")
         clientes = cursor.fetchall()
         lista_cliente(clientes)
-        #verifico si el id del usuario ingresado es el correcto
-        while True: 
-            opcion = int(input("\nSelecciona el numero de id del usuario que deseas modificar "))
-
-            for cliente in clientes:
-                if  cliente["id_cliente"] == opcion:
-                    clientes_modificar = cliente
+        
+        if not clientes:
+            print("No hay clientes registrados.")
+            return
+        
+        # Seleccionar cliente a modificar
+        while True:
+            try:
+                opcion = int(input("\nSelecciona el número de id del cliente que deseas modificar: "))
+                
+                cliente_encontrado = None
+                for cliente in clientes:
+                    if cliente["id_cliente"] == opcion:
+                        cliente_encontrado = cliente
+                        break
+                
+                if cliente_encontrado:
                     break
-            print("❌ El id del usuario ingresado no es valido")
-
-        cuit_nuevo = input("Ingresa el numero de cuit o presiona enter si quieres modificarlo") or clientes_modificar["cuit"]
-        razon_social = input("Ingresa el numero de cuit o presiona enter si quieres modificarlo") or clientes_modificar["razon_social"]
-        email = input("Ingresa el numero de cuit o presiona enter si quieres modificarlo") or clientes_modificar["email"]
+                else:
+                    print("❌ El id del cliente ingresado no es válido")
+            except ValueError:
+                print("❌ Por favor ingresa un número válido")
+        
+        # Obtener nuevos datos (mantener los actuales si no se ingresan)
+        print(f"\nModificando cliente: {cliente_encontrado['razon_social']}")
+        print("(Presiona Enter para mantener el valor actual)")
+        
+        cuit_nuevo = input(f"CUIT actual [{cliente_encontrado['cuit']}]: ") or cliente_encontrado["cuit"]
+        razon_social = input(f"Razón social actual [{cliente_encontrado['razon_social']}]: ") or cliente_encontrado["razon_social"]
+        email = input(f"Email actual [{cliente_encontrado['email']}]: ") or cliente_encontrado["email"]
+        
+        # Actualizar en la base de datos
         cursor.execute("""
-                        UPDATE INTO ciudad (nombre, id_pais) VALUES (%s, %s)
-                        ON DUPLICATE KEY UPDATE id_ciudad = LAST_INSERT_ID(id_ciudad)
-                    """, (nueva_ciudad, id_pais))
-                    
-
+            UPDATE cliente 
+            SET cuit = %s, razon_social = %s, email = %s
+            WHERE id_cliente = %s
+        """, (cuit_nuevo, razon_social, email, opcion))
+        
+        connection.commit()
+        print("✅ Cliente modificado correctamente")
+        
     except Exception as e:
-        print(f"❌ Error de conexión: {str(e)}")
+        print(f"❌ Error al modificar cliente: {str(e)}")
+        if connection:
+            connection.rollback()
     finally:
-        if cursor: cursor.close()
-        if connection: connection.close()
+        if cursor: 
+            cursor.close()
+        if connection: 
+            connection.close()
+
+def eliminar_cliente():
+    connection = None
+    cursor = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        
+        # Listar todos los clientes
+        cursor.execute("SELECT * FROM cliente")
+        clientes = cursor.fetchall()
+        lista_cliente(clientes)
+        
+        if not clientes:
+            print("No hay clientes registrados.")
+            return
+        
+        # Seleccionar cliente a eliminar
+        while True:
+            try:
+                opcion = int(input("\nSelecciona el número de id del cliente que deseas eliminar: "))
+                
+                cliente_encontrado = None
+                for cliente in clientes:
+                    if cliente["id_cliente"] == opcion:
+                        cliente_encontrado = cliente
+                        break
+                
+                if cliente_encontrado:
+                    # Confirmar eliminación
+                    confirmacion = input(f"¿Estás seguro de eliminar al cliente {cliente_encontrado['razon_social']}? (s/n): ").lower()
+                    if confirmacion == 's':
+                        break
+                    else:
+                        print("Operación cancelada")
+                        return
+                else:
+                    print("❌ El id del cliente ingresado no es válido")
+            except ValueError:
+                print("❌ Por favor ingresa un número válido")
+        
+        # Eliminar cliente
+        cursor.execute("DELETE FROM cliente WHERE id_cliente = %s", (opcion,))
+        connection.commit()
+        print("✅ Cliente eliminado correctamente")
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar cliente: {str(e)}")
+        if connection:
+            connection.rollback()
+    finally:
+        if cursor: 
+            cursor.close()
+        if connection: 
+            connection.close()
 
 
 
