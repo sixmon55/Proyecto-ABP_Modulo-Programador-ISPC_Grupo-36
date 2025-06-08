@@ -1,18 +1,23 @@
 from datetime import datetime, timedelta
 from conexion import get_connection
+from main import menu_inicio
 
 def pantalla_arrepentimiento():
     print("""
     --- BOTÓN DE ARREPENTIMIENTO ---
     """)
-
+    
+    print("Escriba 'salir' para volver al menú principal")
     email = input("Ingrese el email del cliente para consultar sus ventas: ")
+    if email.lower() == "salir":
+        menu_inicio()
+        return
 
     try:
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Consulta las ventas asociadas a ese email
+        # Consulta las ventas del cliente según su email
         query = """
         SELECT v.id_venta, c.email, v.id_destino, he.fecha, ev.nombre 
         FROM VENTA v
@@ -25,11 +30,13 @@ def pantalla_arrepentimiento():
         cursor.execute(query, (email,))
         ventas = cursor.fetchall()
 
+        # Si no hay ventas, mostrar mensaje y solicitar nuevamente el email
         if not ventas:
             print("No se encontraron ventas asociadas a este cliente.")
+            pantalla_arrepentimiento()
             return
 
-        # Agrupar por ID de venta para evitar repeticiones si hay múltiples estados
+        # Agrupa las ventas para mostrar una sola por ID
         ventas_dict = {}
         for v in ventas:
             id_venta = v[0]
@@ -41,18 +48,23 @@ def pantalla_arrepentimiento():
                     "estado": v[4]
                 }
 
-        # Mostrar ventas únicas
         print("\nVentas encontradas:")
         for idx, (id_venta, datos) in enumerate(ventas_dict.items(), start=1):
             print(f"{idx}. ID Venta: {id_venta}, Destino ID: {datos['id_destino']}, Estado: {datos['estado']}, Fecha estado: {datos['fecha_estado']}")
 
-        seleccion = int(input("\nSeleccione el número de la venta que desea revisar: "))
+        seleccion_input = input("\nSeleccione el número de la venta que desea revisar: ")
+        if seleccion_input.lower() == "salir":
+            menu_inicio()
+            return
+
+        seleccion = int(seleccion_input)
         id_venta_seleccionada = list(ventas_dict.keys())[seleccion - 1]
         venta_seleccionada = ventas_dict[id_venta_seleccionada]
 
         estado_actual = venta_seleccionada["estado"]
         fecha_estado = venta_seleccionada["fecha_estado"]
 
+        # Si el estado es pendiente y dentro del plazo de 5 minutos, permite cancelar
         if estado_actual.lower() == "pendiente":
             tiempo_actual = datetime.now()
             tiempo_estado = datetime.combine(fecha_estado, datetime.min.time())
@@ -66,27 +78,40 @@ def pantalla_arrepentimiento():
                 opcion = input("Ingrese una opción: ")
 
                 if opcion == "1":
-                    # Cambiar estado a 'Anulada'
                     update_query = """
                     INSERT INTO HISTORIAL_ESTADOVENTA (id_venta, id_estado, fecha)
                     VALUES (%s, %s, NOW())
                     """
-                    cursor.execute(update_query, (id_venta_seleccionada, 3))  # Estado 3 = Anulada
+                    cursor.execute(update_query, (id_venta_seleccionada, 3))
                     connection.commit()
                     print("La venta ha sido cancelada exitosamente.")
+                    menu_inicio()
+                    return
                 else:
                     print("Operación cancelada por el usuario.")
+                    menu_inicio()
+                    return
             else:
                 print("\nUsted ha sobrepasado el tiempo estipulado para cancelación/arrepentimiento.")
                 print("Por favor, comuníquese con la compañía para gestionar un cambio.")
                 print("0800-000000 Atención al cliente de SkyRoute, de Lunes a Viernes de 09 a 18 hs.")
                 print("\n1 - Volver al menú principal")
                 print("2 - Salir del sistema")
+                opcion = input("Ingrese una opción: ")
+                if opcion == "1":
+                    menu_inicio()
+                    return
+                else:
+                    return
         else:
             print(f"La venta seleccionada no está en estado 'Pendiente' (estado actual: {estado_actual}).")
+            menu_inicio()
+            return
 
     except Exception as e:
         print(f"Ocurrió un error: {e}")
+        menu_inicio()
+        return
     finally:
         if connection:
             cursor.close()
