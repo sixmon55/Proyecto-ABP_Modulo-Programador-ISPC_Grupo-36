@@ -47,7 +47,7 @@ def menu_inicio():
                         case 4:
                             consultar_ventas()
                         case 5:
-                            boton_arrepentimiento()
+                            boton_arrepentimiento.pantalla_arrepentimiento()
                         case 6: 
                             acerca_sistema()
                         case 7:
