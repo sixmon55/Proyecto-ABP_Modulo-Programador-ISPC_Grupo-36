@@ -90,119 +90,125 @@ def ver_destino(menu_inicio):
  
 
 def agregar_destino(menu_inicio):
-        try:
-            connection = get_connection()
+    connection = None
+    cursor = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
 
-            cursor = connection.cursor(dictionary=True)  
+        while True:
+            print("\n--- AGREGAR NUEVO DESTINO ---")
+            try:
+                # Solicitar país
+                pais = input("Escribe un país (o presione Enter para volver al menú) ► ").title().strip()
+                if not pais:  # Si presiona Enter sin escribir nada
+                    menu_inicio()
+                    return
+                
+                cursor.execute("SELECT id_pais FROM pais WHERE nombre = %s", (pais,))
+                resultado = cursor.fetchone()
+                
+                if not resultado:
+                    cursor.execute("INSERT INTO pais (nombre) VALUES (%s)", (pais,))
+                    id_pais = cursor.lastrowid 
+                    connection.commit()     
+                else:
+                    id_pais = resultado["id_pais"]
+                print(f"✅ País '{pais}' registrado correctamente")
 
-             
-            while True:
-                        try:
-                                pais=input("Escribe un pais ► ").title().strip()
-                                cursor.execute(
-                                    "SELECT id_pais FROM pais WHERE nombre = %s",  # Consulta SQL
-                                    (pais,)  # Parámetro (la coma lo convierte en tupla)
-                                )
-                                resultado = cursor.fetchone()
-                                
-                                if not resultado :
-                                    cursor.execute("INSERT INTO pais (nombre) VALUES (%s)",(pais,))
-                                    id_pais = cursor.lastrowid 
-                                    connection.commit()     
-                                    
-                                    
-                                else:
-                                    id_pais = resultado["id_pais"]
-                                print(f"✅ País '{pais}' agregado correctamente")
-                                break
-                                
-                        except ValueError:
-                              print("❌ Escribe un valor correcto")
+                # Solicitar ciudad
+                ciudad = input("Escribe una ciudad (o presione Enter para volver al menú) ► ").title().strip()
+                if not ciudad:
+                    menu_inicio()
+                    return
+                
+                cursor.execute("SELECT id_ciudad FROM ciudad WHERE nombre = %s", (ciudad,))
+                resultado = cursor.fetchone()
+                
+                if not resultado:
+                    cursor.execute("INSERT INTO ciudad (nombre, id_pais) VALUES (%s, %s)", (ciudad, id_pais))
+                    id_ciudad = cursor.lastrowid
+                    connection.commit()
+                else:
+                    id_ciudad = resultado["id_ciudad"]
+                print(f"✅ Ciudad '{ciudad}' registrada correctamente")
 
-            while True:
-                  
-                        try:
-                                ciudad=input("Escribe una Ciudad ► ").title().strip()
-                                cursor.execute(
-                                    "SELECT id_ciudad FROM ciudad WHERE nombre = %s",  
-                                    (ciudad,)  
-                                )
-                                resultado = cursor.fetchone()
-                                
-                                if not resultado :
-                                    cursor.execute("INSERT INTO ciudad (nombre,id_pais) VALUES (%s,%s)",(ciudad,id_pais))
-                                    id_ciudad = cursor.lastrowid
-                                    connection.commit()
-                                else:
-                                    id_ciudad = resultado["id_ciudad"]
-                                           
-                                print(f"✅ Ciudad '{ciudad}' agregada correctamente")
-                                break
-                                
-                        except ValueError:
-                              print("❌ Escribe un valor correcto")
-            
-            while True:
-                  
-                  
-                        try:
-                                costo=float(input("Escribe el valor de costo ► "))
-                                cursor.execute("INSERT INTO destino (costo_base,id_ciudad) VALUES (%s,%s)",(costo,id_ciudad))
-                                connection.commit()     
-                                print(f"✅ Costo '{costo}' agregado correctamente")
-                                break
-                                
-                        except ValueError:
-                              print("❌ Escribe un valor correcto")
-                              
-            
-        except ValueError:
-             print("Error en la conexion")
-        finally:
-                if cursor is not None:  # Verifica si el cursor existe
-                    cursor.close()
-                if connection is not None:  # Verifica si la conexión existe
-                    connection.close()
-        
-                                        
-            
+                # Solicitar costo
+                while True:
+                    costo = input("Escribe el valor de costo (o presione Enter para volver al menú) ► ").strip()
+                    if not costo:
+                        menu_inicio()
+                        return
+                    
+                    try:
+                        costo = float(costo)
+                        cursor.execute("INSERT INTO destino (costo_base, id_ciudad) VALUES (%s, %s)", (costo, id_ciudad))
+                        connection.commit()     
+                        print(f"✅ Costo ${costo:.2f} registrado correctamente")
+                        break
+                    except ValueError:
+                        print("❌ Error: Debe ingresar un valor numérico")
+
+                # Preguntar qué hacer después
+                while True:
+                    opcion = input("\n¿Qué deseas hacer ahora?\n1. Agregar otro destino\n2. Volver al menú principal\n3. Salir\n► ")
+                    if opcion == '1':
+                        break
+                    elif opcion == '2':
+                        menu_inicio()
+                        return
+                    elif opcion == '3':
+                        print("¡Hasta luego!")
+                        exit()
+                    else:
+                        print("❌ Opción no válida. Intente nuevamente")
+
+            except ValueError:
+                print("❌ Escribe un valor correcto")
+            except Exception as e:
+                connection.rollback()
+                print(f"❌ Error al agregar destino: {str(e)}")
+
+    except Exception as e:
+        print(f"❌ Error general: {str(e)}")
+    finally:
+        if cursor: cursor.close()
+        if connection: connection.close()
+
 def modificar_destino(menu_inicio):
     connection = None
     cursor = None
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
-        try:
-            connection = get_connection()
 
-            cursor = connection.cursor(dictionary=True)  
+        # Mostrar lista de destinos
+        cursor.execute("""
+            SELECT d.id_destino, d.costo_base, 
+                   c.nombre AS ciudad, p.nombre AS pais
+            FROM destino d
+            JOIN ciudad c ON d.id_ciudad = c.id_ciudad
+            JOIN pais p ON c.id_pais = p.id_pais
+            ORDER BY d.id_destino
+        """)
+        destinos = cursor.fetchall()
 
-            cursor.execute("SELECT destino.costo_base,destino.id_destino AS id,ciudad.nombre AS nombre_ciudad,pais.nombre AS nombre_pais FROM destino INNER JOIN ciudad ON destino.id_ciudad = ciudad.id_ciudad INNER JOIN pais ON ciudad.id_pais = pais.id_pais ORDER BY destino.id_destino ASC;")
+        print("\n📋 LISTA DE DESTINOS DISPONIBLES:")
+        print("+-----+-----------------+------------+--------------+")
+        print("| ID  | Ciudad          | País       | Costo Base   |")
+        print("+-----+-----------------+------------+--------------+")
+        for destino in destinos:
+            print(f"| {destino['id_destino']:3} | {destino['ciudad']:<15} | {destino['pais']:<10} | $ {destino['costo_base']:9.2f} |")
+        print("+-----+-----------------+------------+--------------+")
 
-            destinos = cursor.fetchall()
-
-            # Mostrar tabla de destinos
-            print("+----+----------------+-----------+-------------+")
-            print("| ID | Ciudad         | País      | Costo       |")
-            print("+----+----------------+-----------+-------------+")
-            
-            for destino in destinos:
-                print(f"| {destino['id']:2} | {destino['nombre_ciudad']:<14} | {destino['nombre_pais']:<9} | $ {destino['costo_base']} |")
-            
-            print("+----+----------------+-----------+-------------+")
-        except ValueError:
-            print("❌ Error en la conexion")   
-
+        # Seleccionar destino a modificar
         while True:
             try:
-                id_destino = int(input("Selecciona el ID del destino que deseas cambiar: "))
-                # Verificar si el destino existe
-                cursor.execute("SELECT id_destino FROM destino WHERE id_destino = %s", (id_destino,))
-                if not cursor.fetchone():
-                    print("ID no encontrado. Intenta nuevamente.")
-                    continue
+                id_destino = int(input("\nSeleccione el ID del destino a modificar (0 para volver) ► "))
+                if id_destino == 0:
+                    menu_inicio()
+                    return
                 
-                # Obtener datos actuales
                 cursor.execute("""
                     SELECT d.id_destino, d.costo_base, 
                            c.id_ciudad, c.nombre AS ciudad, 
@@ -212,39 +218,52 @@ def modificar_destino(menu_inicio):
                     JOIN pais p ON c.id_pais = p.id_pais
                     WHERE d.id_destino = %s
                 """, (id_destino,))
-                destino_actual = cursor.fetchone()
-
-                # Solicitar nuevos datos
-                nuevo_pais = input(f"País actual ({destino_actual['pais']}) ► ") or destino_actual['pais']
-                nueva_ciudad = input(f"Ciudad actual ({destino_actual['ciudad']}) ► ") or destino_actual['ciudad']
+                destino = cursor.fetchone()
+                
+                if not destino:
+                    print("❌ No existe un destino con ese ID")
+                    continue
+                
+                print(f"\n✏️ MODIFICANDO DESTINO ID {id_destino}:")
+                print(f"Ciudad: {destino['ciudad']}")
+                print(f"País: {destino['pais']}")
+                print(f"Costo base: ${destino['costo_base']:.2f}")
+                
+                # Modificar datos (presionar Enter para mantener el valor actual)
+                print("\n(Presione Enter para mantener el valor actual)")
+                nuevo_pais = input(f"\nPaís actual [{destino['pais']}] ► ").title().strip() or destino['pais']
+                nueva_ciudad = input(f"Ciudad actual [{destino['ciudad']}] ► ").title().strip() or destino['ciudad']
                 
                 while True:
+                    nuevo_costo = input(f"Costo actual [${destino['costo_base']:.2f}] ► ").strip()
+                    if not nuevo_costo:
+                        nuevo_costo = destino['costo_base']
+                        break
                     try:
-                        nuevo_costo = input(f"Costo actual ({destino_actual['costo_base']}) ► ")
-                        nuevo_costo = float(nuevo_costo) if nuevo_costo else destino_actual['costo_base']
+                        nuevo_costo = float(nuevo_costo)
                         break
                     except ValueError:
                         print("❌ El costo debe ser un número")
 
-                # Actualizar país (si cambió)
-                if nuevo_pais != destino_actual['pais']:
+                # Actualizar país si cambió
+                if nuevo_pais != destino['pais']:
                     cursor.execute("""
                         INSERT INTO pais (nombre) VALUES (%s)
                         ON DUPLICATE KEY UPDATE id_pais = LAST_INSERT_ID(id_pais)
                     """, (nuevo_pais,))
                     id_pais = cursor.lastrowid
                 else:
-                    id_pais = destino_actual['id_pais']
+                    id_pais = destino['id_pais']
 
-                # Actualizar ciudad (si cambió)
-                if nueva_ciudad != destino_actual['ciudad']:
+                # Actualizar ciudad si cambió
+                if nueva_ciudad != destino['ciudad']:
                     cursor.execute("""
                         INSERT INTO ciudad (nombre, id_pais) VALUES (%s, %s)
                         ON DUPLICATE KEY UPDATE id_ciudad = LAST_INSERT_ID(id_ciudad)
                     """, (nueva_ciudad, id_pais))
                     id_ciudad = cursor.lastrowid
                 else:
-                    id_ciudad = destino_actual['id_ciudad']
+                    id_ciudad = destino['id_ciudad']
 
                 # Actualizar destino
                 cursor.execute("""
@@ -254,17 +273,31 @@ def modificar_destino(menu_inicio):
                 """, (nuevo_costo, id_ciudad, id_destino))
 
                 connection.commit()
-                print("✅ Destino modificado correctamente (país, ciudad y costo actualizados)")
-                break
+                print("\n✅ Destino modificado exitosamente!")
+                
+                # Opciones post-modificación
+                while True:
+                    opcion = input("\n¿Qué deseas hacer ahora?\n1. Modificar otro destino\n2. Volver al menú principal\n3. Salir\n► ")
+                    if opcion == '1':
+                        modificar_destino(menu_inicio)
+                        return
+                    elif opcion == '2':
+                        menu_inicio()
+                        return
+                    elif opcion == '3':
+                        print("¡Hasta luego!")
+                        exit()
+                    else:
+                        print("❌ Opción no válida. Intente nuevamente")
 
             except ValueError:
-                print("Error: Ingresa un número válido")
+                print("❌ Error: Debe ingresar un número válido")
             except Exception as e:
-                print(f"Error al modificar: {e}")
-                if connection: connection.rollback()
+                connection.rollback()
+                print(f"❌ Error al modificar: {str(e)}")
 
     except Exception as e:
-        print(f"Error en la conexión: {e}")
+        print(f"❌ Error de conexión: {str(e)}")
     finally:
         if cursor: cursor.close()
         if connection: connection.close()
@@ -273,15 +306,13 @@ def eliminar_destino(menu_inicio):
     connection = None
     cursor = None
     try:
-        # 1. Establecer conexión y mostrar destinos
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
         
-        # Mostrar tabla de destinos
+        # Mostrar destinos disponibles
         cursor.execute("""
             SELECT d.id_destino, d.costo_base, 
-                   c.nombre AS ciudad, p.nombre AS pais,
-                   c.id_ciudad, p.id_pais
+                   c.nombre AS ciudad, p.nombre AS pais
             FROM destino d
             JOIN ciudad c ON d.id_ciudad = c.id_ciudad
             JOIN pais p ON c.id_pais = p.id_pais
@@ -289,25 +320,23 @@ def eliminar_destino(menu_inicio):
         """)
         destinos = cursor.fetchall()
 
-        print("\n📋 Lista de Destinos Disponibles:")
+        print("\n📋 LISTA DE DESTINOS DISPONIBLES:")
         print("+-----+-----------------+------------+--------------+")
-        print("| ID  | Ciudad          | País       | Costo        |")
+        print("| ID  | Ciudad          | País       | Costo Base   |")
         print("+-----+-----------------+------------+--------------+")
         for destino in destinos:
             print(f"| {destino['id_destino']:3} | {destino['ciudad']:<15} | {destino['pais']:<10} | $ {destino['costo_base']:9.2f} |")
         print("+-----+-----------------+------------+--------------+")
 
-        # 2. Proceso de eliminación
+        # Proceso de eliminación
         while True:
             try:
-                id_destino = int(input("\nIngrese el ID del destino a eliminar (0 para cancelar) ► "))
-                
+                id_destino = int(input("\nIngrese el ID del destino a eliminar (0 para volver) ► "))
                 if id_destino == 0:
-                    print("🚫 Operación cancelada")
                     menu_inicio()
                     return
                 
-                # Verificar existencia del destino
+                # Verificar existencia
                 cursor.execute("""
                     SELECT d.id_destino, c.nombre AS ciudad, p.nombre AS pais,
                            c.id_ciudad, p.id_pais
@@ -322,47 +351,51 @@ def eliminar_destino(menu_inicio):
                     print("❌ Error: No existe un destino con ese ID")
                     continue
                     
-                # Confirmación de eliminación
+                # Confirmación
                 confirmar = input(f"¿Está seguro de eliminar {destino['ciudad']} ({destino['pais']})? [s/n] ► ").lower()
                 if confirmar != 's':
                     print("🚫 Eliminación cancelada")
                     continue
                 
-                try:
-                    # Primero eliminar el destino
-                    cursor.execute("DELETE FROM destino WHERE id_destino = %s", (id_destino,))
-                    
-                    cursor.execute("SELECT COUNT(*) FROM destino WHERE id_ciudad = %s", (destino['id_ciudad'],))
-                    if cursor.fetchone()['COUNT(*)'] == 0:
-                        cursor.execute("DELETE FROM ciudad WHERE id_ciudad = %s", (destino['id_ciudad'],))
-                        print(f"⚠️ Se eliminó la ciudad {destino['ciudad']}")
-                    
-                    cursor.execute("SELECT COUNT(*) FROM ciudad WHERE id_pais = %s", (destino['id_pais'],))
-                    if cursor.fetchone()['COUNT(*)'] == 0:
-                        cursor.execute("DELETE FROM pais WHERE id_pais = %s", (destino['id_pais'],))
-                        print(f"⚠️ Se eliminó el país {destino['pais']}")
-                    
-                    connection.commit()
-                    print(f"✅ Destino ID {id_destino} eliminado exitosamente")
-                    
-                    # Preguntar si desea eliminar otro destino
-                    otro = input("¿Desea eliminar otro destino? [s/n] ► ").lower()
-                    if otro == 's':
-                        eliminar_destino(menu_inicio)
-                    else:
-                        menu_inicio()
-                    return
-                    
-                except Exception as e:
-                    connection.rollback()
-                    print(f"❌ Error al eliminar: {str(e)}")
+                # Eliminación
+                cursor.execute("DELETE FROM destino WHERE id_destino = %s", (id_destino,))
                 
+                # Verificar y eliminar ciudad si no tiene más destinos
+                cursor.execute("SELECT COUNT(*) FROM destino WHERE id_ciudad = %s", (destino['id_ciudad'],))
+                if cursor.fetchone()['COUNT(*)'] == 0:
+                    cursor.execute("DELETE FROM ciudad WHERE id_ciudad = %s", (destino['id_ciudad'],))
+                
+                # Verificar y eliminar país si no tiene más ciudades
+                cursor.execute("SELECT COUNT(*) FROM ciudad WHERE id_pais = %s", (destino['id_pais'],))
+                if cursor.fetchone()['COUNT(*)'] == 0:
+                    cursor.execute("DELETE FROM pais WHERE id_pais = %s", (destino['id_pais'],))
+                
+                connection.commit()
+                print(f"✅ Destino ID {id_destino} eliminado exitosamente")
+                
+                # Opciones post-eliminación
+                while True:
+                    opcion = input("\n¿Qué deseas hacer ahora?\n1. Eliminar otro destino\n2. Volver al menú principal\n3. Salir\n► ")
+                    if opcion == '1':
+                        eliminar_destino(menu_inicio)
+                        return
+                    elif opcion == '2':
+                        menu_inicio()
+                        return
+                    elif opcion == '3':
+                        print("¡Hasta luego!")
+                        exit()
+                    else:
+                        print("❌ Opción no válida. Intente nuevamente")
+
             except ValueError:
                 print("❌ Error: Debe ingresar un número válido")
+            except Exception as e:
+                connection.rollback()
+                print(f"❌ Error al eliminar: {str(e)}")
 
     except Exception as e:
         print(f"❌ Error de conexión: {str(e)}")
-        if connection: connection.rollback()
     finally:
         if cursor: cursor.close()
         if connection: connection.close()
