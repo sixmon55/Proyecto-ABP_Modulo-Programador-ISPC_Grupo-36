@@ -6,10 +6,11 @@ Instalación: El sistema ha sido desarrollado y ejecutado en el editor "Visual S
 1) Última versión de Visual Studio Code.
 2) Última versión de Python de acorde a su sistema operativo.
 3) Extensión de Python para Visual Studio Code, la misma la encontrará dentro de VS Code. Posteriormente, podrá visualizar y ejecutar el programa.
-4) El usuario debe instalar MySQL en su últim versión, descargar el archivo 'DB_SkyRoute_grupo36.sql' e iniciar y la Base de datos y todas sus tablas.
+4) El usuario debe instalar MySQL en su última versión, descargar el archivo 'DB_SkyRoute_grupo36.sql' e iniciar la Base de datos y todas sus tablas.
 5) El usuario debe tener descargada la libreria 'mysql-connector'. Puede instalarse ejecutando el comando "pip install mysql-connector-python"
 en un terminal de VS Code. (Entendiendo que está instalada correctamente la ultima versión de Python).
-6) En caso de que el usuario cuente con contraseña en su GDBD MySQL, deberá modificar el archivo del módulo 'conexion.py' 11
+6) Descargar todos los archivos .py que conforman cada uno de los módulos del programa.
+7) En caso de que el usuario cuente con contraseña en su GDBD MySQL, deberá modificar el archivo del módulo 'conexion.py' en la línea 11,
 En el siguiente formato: password="contraseña del usuario".
 
 
