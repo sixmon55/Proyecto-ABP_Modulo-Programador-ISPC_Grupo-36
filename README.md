@@ -14,4 +14,4 @@ en un terminal de VS Code. (Entendiendo que está instalada correctamente la ult
 En el siguiente formato: password="contraseña del usuario".
 
 
-Miembros del equipo desarrolador: 1) Rodrigo Alejandro Espinosa. Dni: 36447281 2) Analia Natalia Pedraza. Dni: 27657321 3) Mauricio Ezequiel Sanches. Dni: 36430840 4) Florencia Micaela Ormeño Quinteros. Dni: 39622516 5) Joaquin Pedrone Pfeiffer. Dni: 39327544 Dni: 6) Simón Rojas. Dni: 95987106
+Miembros del equipo desarrollador: 1) Rodrigo Alejandro Espinosa. Dni: 36447281 2) Analia Natalia Pedraza. Dni: 27657321 3) Mauricio Ezequiel Sanches. Dni: 36430840 4) Florencia Micaela Ormeño Quinteros. Dni: 39622516 5) Joaquin Pedrone Pfeiffer. Dni: 39327544 Dni: 6) Simón Rojas. Dni: 95987106
