@@ -3,7 +3,8 @@ Bienvenidos, este es el repositorio al proyecto ABP del grupo 36 del Módulo Pro
 Objetivo: Proveer a la empresa de viajes 'Skyroute' de un sistema que le permita gestionar sus ventas, clientes, y destinos y otras operaciones relacionadas a las ventas.
 
 Instalación: El sistema ha sido desarrollado y ejecutado en el editor "Visual Studio Code" en lenguaje Python. Por lo que el usuario deberá instalar:
-1) Última versión de Visual Studio Code. 2) Última versión de Python de acorde a su sistema operativo.
+1) Última versión de Visual Studio Code.
+2) Última versión de Python de acorde a su sistema operativo.
 3) Extensión de Python para Visual Studio Code, la misma la encontrará dentro de VS Code. Posteriormente, podrá visualizar y ejecutar el programa.
 4) El usuario debe instalar MySQL en su últim versión, descargar el archivo 'DB_SkyRoute_grupo36.sql' e iniciar y la Base de datos y todas sus tablas.
 5) El usuario debe tener descargada la libreria 'mysql-connector'. Puede instalarse ejecutando el comando "pip install mysql-connector-python"
